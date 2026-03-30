@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # Required — generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in .env}
+      # Optional overrides (defaults shown)
+      DATABASE_URL: sqlite+aiosqlite:////data/tangents.db
+      AUTH_MODE: ${AUTH_MODE:-basic}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-tangents}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      SYNTHESIS_MODEL: ${SYNTHESIS_MODEL:-}
+      BRANCH_NAMING_MODE: ${BRANCH_NAMING_MODE:-random}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    volumes:
+      - backend_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend_data:

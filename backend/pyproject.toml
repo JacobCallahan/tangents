@@ -1,0 +1,67 @@
+[project]
+name = "tangents-backend"
+version = "0.1.0"
+description = "Tangents — AI chat with Git-like branching history (backend)"
+requires-python = ">=3.14"
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "alembic>=1.18.4",
+    "cryptography>=46.0.6",
+    "fastapi>=0.135.2",
+    "httpx>=0.28.1",
+    "litellm>=1.82.6,!=1.82.7,!=1.82.8",
+    "passlib>=1.7.4",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.22",
+    "sqlalchemy>=2.0.48",
+    "sse-starlette>=3.3.3",
+    "tiktoken>=0.12.0",
+    "uvicorn[standard]>=0.42.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "playwright>=1.50.0",
+    "pytest-playwright>=0.7.0",
+    "python-dotenv>=1.1.0",
+    "ruff>=0.15.7",
+    "tox>=4.50.3",
+    "tox-uv>=1.33.4",
+]
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "live_llm: runs real LLM calls — requires LIVE_LLM_TESTS=1 and API key env vars",
+    "e2e: playwright end-to-end tests against a live local server",
+]
+
+[tox]
+env_list = ["py312"]
+
+[testenv]
+runner = "uv-venv-lock-runner"
+# Unit tests only; use `make test-e2e` for Playwright E2E tests
+commands = [["pytest", "tests/", "--ignore=tests/e2e", "{posargs}"]]
+
+[project.scripts]
+tangents-backend = "app.main:app"

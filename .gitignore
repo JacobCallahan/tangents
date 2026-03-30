@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# uv
+.uv/
+
+# Alembic (keep migrations, ignore runtime files)
+backend/tangents.db
+backend/tangents.db-shm
+backend/tangents.db-wal
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Test / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+htmlcov/
+.coverage
+coverage.xml
+*.log
+
+# Local notes
+js_tests.md
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
