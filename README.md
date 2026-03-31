@@ -2,7 +2,17 @@
 
 AI chat with Git-like branching history. Explore divergent conversation lines with any LLM, synthesize side-threads back to main, and visualise your full conversation tree.
 
-## Quick Start
+## Quick Start - Docker Compose
+
+```bash
+cp backend/.env.example .env
+# Edit .env: set ENCRYPTION_KEY (generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+make deploy
+# Access the web ui using port 3000 on the host.
+# Edit the frontend section of docker-compose.yml to set a different port.
+```
+
+## Quick Start - Bare
 
 ### Prerequisites
 - Python 3.12+ with [uv](https://github.com/astral-sh/uv)
