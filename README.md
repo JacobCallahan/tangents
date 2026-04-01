@@ -1,52 +1,104 @@
 # Tangents
 
-AI chat with Git-like branching history. Explore divergent conversation lines with any LLM, synthesize side-threads back to main, and visualise your full conversation tree.
+Most chat apps trap you in a single linear thread. **Tangents** treats every message as a node in a graph — branch off at any point, explore a completely different direction, then jump back and try again. Like Git for conversations.
 
-## Quick Start - Docker Compose
+- **Branch anywhere** — tangent off any message to spin up a parallel thread without losing your place
+- **Navigate freely** — click any node in the graph to jump to that point in history; your context follows
+- **Delete and prune** — remove any node (and its subtree) to clean up dead ends
+- **Synthesize** — merge insights from a side-thread back into your main line
+- **Any LLM** — OpenAI, Anthropic, Gemini, Ollama, and more.
+
+![Tangents conversation graph showing branching chat threads](media/demo/tangent_flow.png)
+
+## Quick Start - Docker
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin (`docker compose version` should work)
+
+### 1. Configure the environment
 
 ```bash
-cp backend/.env.example .env
-# Edit .env: set ENCRYPTION_KEY (generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
-make deploy
-# Access the web ui using port 3000 on the host.
-# Edit the frontend section of docker-compose.yml to set a different port.
+cp backend/.env.example backend/.env
 ```
+
+Open `backend/.env` and fill in the required values:
+
+- **`ENCRYPTION_KEY`** *(required)* — generate one with:
+  ```bash
+  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  ```
+- **`ADMIN_PASSWORD`** — change from the default `tangents` for any internet-exposed instance
+- Add at least one LLM provider key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.)
+
+### 2. Build and deploy
+
+```bash
+make deploy          # build Docker images and start all services
+```
+
+- App: http://localhost (served by nginx)
+- API docs: http://localhost/api/docs
+
+Default credentials: `admin` / `tangents` (override via `ADMIN_USERNAME` / `ADMIN_PASSWORD` in `.env`)
+
+### Other useful deployment commands
+
+```bash
+make deploy-logs     # tail logs for all services
+make deploy-down     # stop and remove containers
+make deploy-restart  # restart running services
+make build-no-cache  # force a full rebuild
+```
+
+> **Fresh install note:** if you previously ran Tangents and need a clean slate (e.g. after a migration reset), run `docker compose down -v` before `make deploy` to wipe the database volume.
+
+---
 
 ## Quick Start - Bare
 
 ### Prerequisites
-- Python 3.12+ with [uv](https://github.com/astral-sh/uv)
-- Node.js 20+
 
-### Backend
+- [uv](https://github.com/astral-sh/uv) — Python package manager (installs Python 3.12 automatically)
+- Node.js 22+ and npm
 
-```bash
-cd backend
-
-# Copy and configure environment
-cp .env.example .env
-# Edit .env: set ENCRYPTION_KEY (generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
-
-# Run database migrations
-uv run alembic upgrade head
-
-# Start development server
-uv run uvicorn app.main:app --reload --port 8000
-```
-
-API docs available at http://localhost:8000/docs
-
-### Frontend
+### 1. Configure the environment
 
 ```bash
-cd frontend
-npm install
-npm run dev
+cp backend/.env.example backend/.env
 ```
 
-App available at http://localhost:5173
+Open `backend/.env` and fill in the required values (same as the Docker section above).
+
+### 2. Install dependencies and start
+
+```bash
+make setup           # uv sync (backend) + npm ci (frontend) + Playwright browsers
+make dev             # backend :8000 + frontend :5173 (Ctrl-C stops both)
+```
+
+Or run them separately:
+
+```bash
+make dev-backend     # FastAPI with --reload on :8000
+make dev-frontend    # Vite HMR dev server on :5173
+```
+
+API docs: http://localhost:8000/docs
 
 Default credentials: `admin` / `tangents`
+
+---
+
+## Testing
+
+```bash
+make test            # backend pytest + frontend Vitest (no E2E, no real LLM)
+make test-backend    # pytest unit tests only
+make test-frontend   # Vitest unit tests only
+make test-e2e        # Playwright E2E (requires local servers running)
+make test-live       # live LLM tests (requires LIVE_LLM_TESTS=1 + API keys in .env)
+```
 
 ---
 
@@ -69,7 +121,9 @@ tangents/
 │   │   │   └── share_links.py  # Share link generation + public view
 │   │   └── services/
 │   │       ├── encryption.py   # Fernet API key encryption
-│   │       └── history.py      # Recursive CTE for linear history
+│   │       ├── history.py      # Recursive CTE for linear history
+│   │       ├── compression.py  # Context window summarisation
+│   │       └── title.py        # Auto-generated chat titles
 │   ├── alembic/           # Database migrations
 │   └── tests/
 ├── frontend/              # Vite + React + TypeScript
@@ -79,11 +133,13 @@ tangents/
 │       │   ├── layout/    # AppShell, Sidebar
 │       │   ├── chat/      # ChatView, MessageList, MessageInput, ModelPicker
 │       │   ├── graph/     # React Flow graph (CommitDotNode, GraphView)
-│       │   └── settings/  # SettingsPage
-│       ├── hooks/         # useChat, useStream
+│       │   ├── settings/  # SettingsPage
+│       │   └── share/     # ShareView (public read-only link)
+│       ├── hooks/         # useChat, useStream, useKeybindings
 │       ├── store/         # Zustand global state
 │       └── types/         # TypeScript interfaces (mirrors backend DTOs)
-└── tasks.md               # Implementation progress tracker
+├── media/                 # Project assets (logos, graphics)
+└── docker-compose.yml
 ```
 
 ## Environment Variables
